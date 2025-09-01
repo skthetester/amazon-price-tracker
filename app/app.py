@@ -1,3 +1,13 @@
+#!/usr/bin/env python3
+"""
+Amazon Price Tracker - Main Flask Application
+
+This file is part of the Amazon Price Tracker project.
+Licensed under the MIT License - see LICENSE file for details.
+
+A web application for tracking Amazon product prices with notifications and trend analysis.
+"""
+
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 import os
 import sys

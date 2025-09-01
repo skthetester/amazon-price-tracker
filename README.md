@@ -2,6 +2,24 @@
 
 A Python-based web application for tracking Amazon product prices with notifications and trend analysis.
 
+## Screenshots
+
+### Homepage - Product List with Price Trends
+![Homepage](static/images/screenshots/homepage.png)
+*View all tracked products with real-time price trends and one-click bulk price updates*
+
+### Product Management
+![Manage Products](static/images/screenshots/manage.png)
+*Add, edit, and delete tracked products with target price settings*
+
+### Product Details & Price History
+![Product Details](static/images/screenshots/product-detail.png)
+*Detailed price trends with interactive charts and historical data*
+
+### Slack Notifications
+![Slack Notifications](static/images/screenshots/slack-notification.png)
+*Automated Slack alerts for price changes and target price alerts*
+
 ## Features
 
 - **Web Interface**: Simple web UI to manage tracked products
@@ -45,6 +63,8 @@ A Python-based web application for tracking Amazon product prices with notificat
 
 4. Access the web interface at `http://localhost:5000`
 
+> **📸 Note**: Screenshot placeholders are in `static/images/screenshots/`. See the README in that folder for instructions on capturing and adding actual screenshots of your running application.
+
 ## Configuration
 
 - Modify `config/settings.py` for scraping intervals and notification thresholds
@@ -69,3 +89,19 @@ python cli.py check
 ## Note
 
 This tool is for educational purposes. Please respect Amazon's Terms of Service and robots.txt when scraping. Consider using official APIs when available.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## Support
+
+If you encounter any issues or have questions, please open an issue on GitHub.

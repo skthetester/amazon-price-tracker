@@ -1,0 +1,62 @@
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "amazon-price-tracker"
+version = "1.0.0"
+description = "A Python-based web application for tracking Amazon product prices with notifications and trend analysis"
+readme = "README.md"
+authors = [
+    {name = "skthetester", email = "skthetester@users.noreply.github.com"}
+]
+license = {text = "MIT"}
+keywords = ["amazon", "price-tracker", "web-scraping", "flask", "notifications"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
+    "Topic :: Office/Business :: Financial",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+requires-python = ">=3.8"
+dependencies = [
+    "flask>=2.3.0",
+    "flask-sqlalchemy>=3.0.0", 
+    "requests>=2.31.0",
+    "beautifulsoup4>=4.12.0",
+    "selenium>=4.15.0",
+    "slack-sdk>=3.21.0",
+    "python-dotenv>=1.0.0",
+    "apscheduler>=3.10.0",
+    "plotly>=5.15.0",
+    "pytz>=2023.3"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-flask>=1.2.0",
+    "black>=23.0.0",
+    "flake8>=6.0.0"
+]
+
+[project.urls]
+Homepage = "https://github.com/skthetester/amazon-price-tracker"
+Repository = "https://github.com/skthetester/amazon-price-tracker"
+Issues = "https://github.com/skthetester/amazon-price-tracker/issues"
+
+[project.scripts]
+amazon-price-tracker = "cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["app*", "config*", "database*", "notifications*", "scraper*"]
+exclude = ["tests*", "docs*"]
