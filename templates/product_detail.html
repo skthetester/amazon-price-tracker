@@ -1,0 +1,229 @@
+{% extends "base.html" %}
+
+{% block title %}{{ product.name }} - Amazon Price Tracker{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Products</a></li>
+                <li class="breadcrumb-item active">{{ product.name[:30] }}{% if product.name|length > 30 %}...{% endif %}</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Product Info -->
+    <div class="col-lg-4 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5><i class="fas fa-info-circle me-2"></i>Product Details</h5>
+            </div>
+            <div class="card-body">
+                {% if product.image_url %}
+                <div class="text-center mb-3">
+                    <img src="{{ product.image_url }}" class="img-fluid rounded" style="max-height: 200px;" alt="{{ product.name }}">
+                </div>
+                {% endif %}
+                
+                <h6 class="card-title">{{ product.name }}</h6>
+                
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <tr>
+                            <td><strong>ASIN:</strong></td>
+                            <td>{{ product.asin }}</td>
+                        </tr>
+                        {% if product.current_price %}
+                        <tr>
+                            <td><strong>Current Price:</strong></td>
+                            <td><span class="fs-5 fw-bold text-primary">${{ "%.2f"|format(product.current_price) }}</span></td>
+                        </tr>
+                        {% endif %}
+                        {% if product.target_price %}
+                        <tr>
+                            <td><strong>Target Price:</strong></td>
+                            <td>
+                                <span class="
+                                    {% if product.current_price and product.current_price <= product.target_price %}
+                                        text-success fw-bold
+                                    {% else %}
+                                        text-secondary
+                                    {% endif %}
+                                ">
+                                    ${{ "%.2f"|format(product.target_price) }}
+                                    {% if product.current_price and product.current_price <= product.target_price %}
+                                        <i class="fas fa-check-circle ms-1"></i>
+                                    {% endif %}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endif %}
+                        <tr>
+                            <td><strong>Added:</strong></td>
+                            <td>{{ product.created_at | est_date }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Last Updated:</strong></td>
+                            <td>{{ product.updated_at | est_datetime }}</td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('scrape_now', product_id=product.id) }}" class="btn btn-success">
+                        <i class="fas fa-sync me-1"></i>Check Price Now
+                    </a>
+                    <a href="{{ product.amazon_url }}" target="_blank" class="btn btn-outline-primary">
+                        <i class="fab fa-amazon me-1"></i>View on Amazon
+                    </a>
+                    <a href="{{ url_for('manage') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-edit me-1"></i>Edit Product
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Price Statistics -->
+    <div class="col-lg-8 mb-4">
+        {% if stats %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5><i class="fas fa-chart-bar me-2"></i>Price Statistics (Last {{ stats.days_tracked }} Days)</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <div class="text-center p-3 bg-light rounded">
+                            <h3 class="text-primary mb-1">${{ "%.2f"|format(stats.current_price) }}</h3>
+                            <small class="text-muted">Current Price</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="text-center p-3 bg-light rounded">
+                            <h3 class="text-success mb-1">${{ "%.2f"|format(stats.min_price) }}</h3>
+                            <small class="text-muted">Lowest Price</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="text-center p-3 bg-light rounded">
+                            <h3 class="text-danger mb-1">${{ "%.2f"|format(stats.max_price) }}</h3>
+                            <small class="text-muted">Highest Price</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="text-center p-3 bg-light rounded">
+                            <h3 class="text-info mb-1">${{ "%.2f"|format(stats.avg_price) }}</h3>
+                            <small class="text-muted">Average Price</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="d-flex justify-content-between">
+                            <span>Price Change:</span>
+                            <span class="{% if stats.price_change > 0 %}text-danger{% elif stats.price_change < 0 %}text-success{% else %}text-muted{% endif %}">
+                                {% if stats.price_change > 0 %}+{% endif %}${{ "%.2f"|format(stats.price_change) }}
+                                ({% if stats.price_change_percent > 0 %}+{% endif %}{{ "%.1f"|format(stats.price_change_percent) }}%)
+                            </span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex justify-content-between">
+                            <span>Data Points:</span>
+                            <span>{{ stats.price_points }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Price Chart -->
+        {% if chart_json %}
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-chart-line me-2"></i>Price Trend</h5>
+            </div>
+            <div class="card-body">
+                <div id="price-chart"></div>
+            </div>
+        </div>
+        {% else %}
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <i class="fas fa-chart-line fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">No Price History Available</h5>
+                <p class="text-muted">Price history will appear here once we start tracking this product.</p>
+                <a href="{{ url_for('scrape_now', product_id=product.id) }}" class="btn btn-primary">
+                    <i class="fas fa-sync me-1"></i>Check Price Now
+                </a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Recent Price History -->
+{% if price_history %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-history me-2"></i>Recent Price History</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Date</th>
+                                <th>Price</th>
+                                <th>Change</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for entry in price_history %}
+                            <tr>
+                                <td>{{ entry.timestamp | est_datetime }}</td>
+                                <td class="fw-bold">${{ "%.2f"|format(entry.price) }}</td>
+                                <td>
+                                    {% if not loop.last %}
+                                        {% set prev_price = price_history[loop.index].price %}
+                                        {% set change = entry.price - prev_price %}
+                                        {% if change != 0 %}
+                                            <span class="{% if change > 0 %}text-danger{% else %}text-success{% endif %}">
+                                                {% if change > 0 %}+{% endif %}${{ "%.2f"|format(change) }}
+                                                ({% if change > 0 %}+{% endif %}{{ "%.1f"|format((change/prev_price)*100) }}%)
+                                            </span>
+                                        {% else %}
+                                            <span class="text-muted">No change</span>
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{% if chart_json %}
+<script>
+    var graphJSON = {{ chart_json|safe }};
+    Plotly.newPlot('price-chart', graphJSON.data, graphJSON.layout, {responsive: true});
+</script>
+{% endif %}
+{% endblock %}

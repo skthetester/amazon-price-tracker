@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+
+{% block title %}Products - Amazon Price Tracker{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1><i class="fas fa-list me-2"></i>Tracked Products</h1>
+            <div>
+                <a href="{{ url_for('check_all_prices') }}" class="btn btn-success me-2" onclick="showLoadingSpinner(this)">
+                    <i class="fas fa-sync me-1"></i>Check All Prices
+                </a>
+                <a href="{{ url_for('manage') }}" class="btn btn-primary">
+                    <i class="fas fa-plus me-1"></i>Add Product
+                </a>
+            </div>
+        </div>
+
+        {% if not products %}
+            <div class="text-center py-5">
+                <i class="fas fa-shopping-cart fa-3x text-muted mb-3"></i>
+                <h3 class="text-muted">No products tracked yet</h3>
+                <p class="text-muted">Start tracking Amazon products to monitor price changes.</p>
+                <a href="{{ url_for('manage') }}" class="btn btn-primary">
+                    <i class="fas fa-plus me-1"></i>Add Your First Product
+                </a>
+            </div>
+        {% else %}
+            <div class="row">
+                {% for product, trend in zip(products, products_with_trends) %}
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="card h-100 product-card">
+                        {% if product.image_url %}
+                        <img src="{{ product.image_url }}" class="card-img-top product-image" alt="{{ product.name }}">
+                        {% else %}
+                        <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                            <i class="fas fa-image fa-3x text-muted"></i>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title">{{ product.name[:50] }}{% if product.name|length > 50 %}...{% endif %}</h5>
+                            
+                            <div class="mt-auto">
+                                {% if product.current_price %}
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="text-muted">Current Price:</span>
+                                    <div class="d-flex align-items-center">
+                                        <span class="fs-5 fw-bold text-primary me-2">${{ "%.2f"|format(product.current_price) }}</span>
+                                        {% if trend['trend']['trend'] == 'up' %}
+                                            <i class="fas fa-arrow-up text-danger" title="Price increased by ${{ '%.2f'|format(trend['trend']['change']) }} ({{ '%.1f'|format(trend['trend']['change_percent']) }}%)"></i>
+                                        {% elif trend['trend']['trend'] == 'down' %}
+                                            <i class="fas fa-arrow-down text-success" title="Price decreased by ${{ '%.2f'|format(abs(trend['trend']['change'])) }} ({{ '%.1f'|format(abs(trend['trend']['change_percent'])) }}%)"></i>
+                                        {% else %}
+                                            <i class="fas fa-minus text-muted" title="Price unchanged"></i>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% endif %}
+                                
+                                {% if product.target_price %}
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="text-muted">Target Price:</span>
+                                    <span class="fs-6 
+                                        {% if product.current_price and product.current_price <= product.target_price %}
+                                            text-success fw-bold
+                                        {% else %}
+                                            text-secondary
+                                        {% endif %}
+                                    ">
+                                        ${{ "%.2f"|format(product.target_price) }}
+                                        {% if product.current_price and product.current_price <= product.target_price %}
+                                            <i class="fas fa-check-circle ms-1"></i>
+                                        {% endif %}
+                                    </span>
+                                </div>
+                                {% endif %}
+                                
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <span class="text-muted">Last Updated:</span>
+                                    <small class="text-secondary">{{ product.updated_at | est_time }}</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card-footer bg-transparent">
+                            <div class="row g-2">
+                                <div class="col">
+                                    <a href="{{ url_for('product_detail', product_id=product.id) }}" class="btn btn-outline-primary btn-sm w-100">
+                                        <i class="fas fa-chart-line me-1"></i>View Trends
+                                    </a>
+                                </div>
+                                <div class="col">
+                                    <a href="{{ product.amazon_url }}" target="_blank" class="btn btn-outline-secondary btn-sm w-100">
+                                        <i class="fab fa-amazon me-1"></i>Amazon
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Auto-refresh every 5 minutes
+setTimeout(function() {
+    location.reload();
+}, 300000);
+
+// Show loading spinner when checking all prices
+function showLoadingSpinner(button) {
+    const originalHTML = button.innerHTML;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Checking Prices...';
+    button.disabled = true;
+    button.classList.add('btn-loading');
+    
+    // Show a toast notification
+    showToast('Checking prices for all products...', 'info');
+}
+
+// Toast notification function
+function showToast(message, type = 'info') {
+    const toastContainer = document.getElementById('toast-container') || createToastContainer();
+    const toast = document.createElement('div');
+    toast.className = `toast align-items-center text-white bg-${type === 'info' ? 'primary' : type} border-0`;
+    toast.setAttribute('role', 'alert');
+    toast.setAttribute('aria-live', 'assertive');
+    toast.setAttribute('aria-atomic', 'true');
+    
+    toast.innerHTML = `
+        <div class="d-flex">
+            <div class="toast-body">${message}</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    `;
+    
+    toastContainer.appendChild(toast);
+    const bsToast = new bootstrap.Toast(toast);
+    bsToast.show();
+    
+    // Remove toast element after it's hidden
+    toast.addEventListener('hidden.bs.toast', function () {
+        toast.remove();
+    });
+}
+
+function createToastContainer() {
+    const container = document.createElement('div');
+    container.id = 'toast-container';
+    container.className = 'toast-container position-fixed top-0 end-0 p-3';
+    container.style.zIndex = '1050';
+    document.body.appendChild(container);
+    return container;
+}
+</script>
+{% endblock %}
